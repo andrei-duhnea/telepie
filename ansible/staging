@@ -1,0 +1,6 @@
+[app]
+app1.example.com
+app2.example.com
+
+[build]
+build.example.com

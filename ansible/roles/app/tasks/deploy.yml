@@ -1,0 +1,62 @@
+---
+# These tasks deploy a pre-built & archived virtual environment
+
+#- name: Notify HipChat of deployment start
+- vars:
+    task_status: Started
+  hipchat:
+    api: "{{ hipchat_api_url }}"
+    token: "{{ hipchat_token }}"
+    room: "{{ hipchat_room_id }}"
+    from: Ansible
+    color: purple
+    msg_format: html
+    msg: "{{ lookup('template', 'hipchat_status.j2') }}"
+  when: notify_hipchat|default(false)|bool
+  tags: ['deploy']
+
+- name: Stop service
+  include_tasks: stop.yml
+  tags: ['deploy']
+
+- name: Check if virtual environment exists
+  become: yes
+  become_user: "{{ user }}"
+  stat: path="{{ venv_path }}"
+  register: venv_stat
+  tags: ['deploy']
+
+- name: Backup then delete the existing virtual environment
+  become: yes
+  become_user: "{{ user }}"
+  vars:
+    - dt: "{{ ansible_date_time }}"
+    - timestamp: "{{ dt.year }}{{ dt.month }}{{ dt.day }}_{{ dt.hour }}{{ dt.minute }}{{ dt.second }}"
+  shell: chdir={{ venvs_dir }} tar --remove-files -zcf {{ home_dir }}/backup_{{ pkg }}_{{ timestamp }}.tar.gz {{ pkg }}
+  when: venv_stat.stat.exists
+  tags: ['deploy']
+
+- name: Transfer virtualenv from build machine
+  synchronize:
+    src: "{{ venv_path }}"
+    dest: "{{ venvs_dir }}"
+  delegate_to: "{{ groups['build'][0] }}"
+  tags: ['deploy']
+
+- name: Start service
+  include_tasks: start.yml
+  tags: ['deploy']
+
+- name: Notify HipChat of deployment end
+  vars:
+    task_status: Finished
+  hipchat:
+    api: "{{ hipchat_api_url }}"
+    token: "{{ hipchat_token }}"
+    room: "{{ hipchat_room_id }}"
+    from: Ansible
+    color: green
+    msg_format: html
+    msg: "{{ lookup('template', 'hipchat_status.j2') }}"
+  when: notify_hipchat|default(false)|bool
+  tags: ['deploy']

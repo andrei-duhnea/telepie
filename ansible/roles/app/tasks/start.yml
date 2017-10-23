@@ -1,0 +1,6 @@
+- name: service-start
+  become: yes
+  become_method: sudo
+  service:
+    name: "{{ service }}"
+    state: started

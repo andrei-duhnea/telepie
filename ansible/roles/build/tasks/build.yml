@@ -1,0 +1,84 @@
+---
+# These tasks build a virtualenv with the app's package installed and archive it
+
+- name: Notify HipChat of build start
+  vars:
+    task_status: Started
+  hipchat:
+    api: "{{ hipchat_api_url }}"
+    token: "{{ hipchat_token }}"
+    room: "{{ hipchat_room_id }}"
+    from: Ansible
+    color: purple
+    msg_format: html
+    msg: "{{ lookup('template', 'hipchat_status.j2') }}"
+  when: notify_hipchat|default(false)|bool
+  tags: ['build']
+
+- name: Create the build directory
+  tempfile:
+    state: directory
+    suffix: build
+  register: build_dir
+  tags: ['build']
+
+- name: Delete the virtualenv
+  file: path={{ venv_path }} state=absent
+  tags: ['build']
+
+- name: Checkout the code
+  git:
+    repo: "{{ repo_uri }}"
+    version: "{{ version }}"
+    dest: "{{ build_dir.path }}/{{ pkg }}"
+  tags: ['build']
+
+- name: Upgrade setup tools
+  pip:
+    virtualenv: "{{ venv_path }}"
+    name: setuptools
+    extra_args: --upgrade
+  tags: ['build']
+
+- name: Upgrade pip
+  pip:
+    virtualenv: "{{ venv_path }}"
+    name: pip
+    extra_args: --upgrade
+  tags: ['build']
+
+- name: Install requirements into virtualenv
+  pip:
+    chdir: "{{ build_dir.path }}/{{ pkg }}"
+    virtualenv: "{{ venv_path }}"
+    requirements: requirements.txt
+  tags: ['build']
+
+- name: Install package into virtualenv
+  shell: chdir={{ build_dir.path }}/{{ pkg }} {{ venv_path }}/bin/python setup.py install
+  tags: ['build']
+
+- name: Delete the build directory
+  file: path={{ build_dir.path }} state=absent
+  tags: ['build']
+
+- name: Archive the Sonar virtual environment
+  vars:
+    - dt: "{{ ansible_date_time }}"
+    - timestamp: "{{ dt.year }}{{ dt.month }}{{ dt.day }}_{{ dt.hour }}{{ dt.minute }}{{ dt.second }}"
+  shell: chdir={{ venvs_dir }} tar zcf {{ home_dir }}/{{ pkg }}_build_{{ timestamp }}.tar.gz {{ venv }}
+  tags: ['build']
+
+- name: Notify HipChat of build end
+  vars:
+    task_status: Finished
+  hipchat:
+    api: "{{ hipchat_api_url }}"
+    token: "{{ hipchat_token }}"
+    room: "{{ hipchat_room_id }}"
+    from: Ansible
+    color: green
+    msg_format: html
+    msg: "{{ lookup('template', 'hipchat_status.j2') }}"
+  when: notify_hipchat|default(false)|bool
+  tags: ['build']

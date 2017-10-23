@@ -1,0 +1,8 @@
+- name: Start service
+  include_tasks: tasks/start.yml
+
+- name: Restart service
+  include_tasks: tasks/restart.yml
+
+- name: Stop service
+  include_tasks: tasks/stop.yml

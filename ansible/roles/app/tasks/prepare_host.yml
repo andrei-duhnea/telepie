@@ -1,0 +1,89 @@
+---
+
+- name: Create user
+  become: yes
+  become_method: sudo
+  user: name={{ user }} home={{ home_dir }}
+  tags: ['prep']
+
+- name: Set home mode
+  become: yes
+  become_method: sudo
+  file: path={{ home_dir }} mode=2770
+  tags: ['prep']
+
+- name: Set group ACL on home
+  become: yes
+  become_method: sudo
+  acl: name={{ home_dir }} etype=group entity={{ group }} permissions=rwx recursive=yes default=yes state=present
+  tags: ['prep']
+
+- name: Adding ansible user "{{ ansible_user_id }}" to group "{{ group }}"
+  become: yes
+  become_method: sudo
+  user: name="{{ ansible_user_id }}"
+        groups="{{ group }}"
+        append=yes
+  tags: ['prep']
+
+- name: Create virtualenvs directory
+  become: yes
+  become_method: sudo
+  file: path={{ venvs_dir}} state=directory owner={{ user }} group={{ group }}
+  tags: ['prep']
+
+- name: Configure virtualenvwrapper in user's shell profile
+  become: yes
+  become_method: sudo
+  blockinfile:
+    dest: "{{ home_dir }}/.bash_profile"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    block: |
+      export WORKON_HOME={{ venvs_dir }}
+      source /bin/virtualenvwrapper.sh
+  tags: ['prep']
+
+- name: Install virtualenvwrapper package
+  become: yes
+  become_method: sudo
+  yum: name=python-virtualenvwrapper state=present
+  tags: ['prep']
+
+- name: Create logs directory
+  become: yes
+  become_method: sudo
+  file: path={{ logs_dir }} state=directory owner={{ user }} group={{ group }}
+  tags: ['prep']
+
+# Install service definition
+
+- name: Install config for systemd service
+  become: yes
+  become_method: sudo
+  template:
+    src: "service.conf.j2"
+    dest: "/etc/{{ service }}.conf"
+    owner: "{{ user }}"
+  tags: ['prep']
+
+- name: Install systemd service file
+  become: yes
+  become_method: sudo
+  template:
+    src: "systemd.service.j2"
+    dest: "/usr/lib/systemd/system/{{ service }}.service"
+  tags: ['prep']
+
+- name: Enable service
+  become: yes
+  become_method: sudo
+  service:
+    name: "{{ service }}"
+    enabled: yes
+  tags: ['prep']
+
+- name: Reload service configs
+  become: yes
+  become_method: sudo
+  systemd: daemon_reload=yes
+  tags: ['prep']

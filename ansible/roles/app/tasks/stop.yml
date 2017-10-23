@@ -1,0 +1,7 @@
+- name: service-stop
+  become: yes
+  become_method: sudo
+  service:
+    name: "{{ service }}"
+    state: stopped
+  ignore_errors: yes

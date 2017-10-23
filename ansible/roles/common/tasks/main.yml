@@ -1,0 +1,21 @@
+- name: Get whoami
+  run_once: true
+  shell: whoami
+  register: whoami
+
+- name: Get gecos
+  run_once: true
+  shell: getent passwd ""{{ whoami.stdout }}"" | cut -d ':' -f 5
+  register: gecos
+
+- name: Keep gecos as whoami
+  run_once: true
+  set_fact:
+    whoami: "{{ gecos.stdout }}"
+  when: not((gecos.stdout is none) or (gecos.stdout | trim == ''))
+
+- name: Keep whoami
+  run_once: true
+  set_fact:
+    whoami: " {{ whoami.stdout }}"
+  when: (gecos.stdout is none) or (gecos.stdout | trim == '')

@@ -1,0 +1,7 @@
+---
+- name: Deploy app
+  hosts: app
+  serial: 1
+  roles:
+    - common
+    - app

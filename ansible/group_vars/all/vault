@@ -1,0 +1,2 @@
+# Replace with actual HipChat token, and encrypt wiht ansible-vault
+vault_hipchat_token: ABCDEFGG12345678

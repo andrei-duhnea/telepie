@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+
+# Deploy to /etc/systemd/system/"{{ service }}".service
+[Unit]
+Description={{ service }}
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+User={{ user }}
+Group={{ group }}
+WorkingDirectory={{ home_dir }}
+# Adjust the application entry point to your needs
+ExecStart=/bin/sh -c "{{ venvs_dir }}/{{ venv }}/bin/python -u {{ venvs_dir }}/{{ venv }}/lib64/python*/site-packages/{{ pkg }}/app.py"
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

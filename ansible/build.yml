@@ -1,0 +1,6 @@
+---
+- name: Build app
+  hosts: build
+  roles:
+    - common
+    - build

@@ -1,0 +1,17 @@
+---
+# Replace with actual package name
+pkg: mypackage
+
+home_dir: "/opt/{{ pkg }}"
+venvs_dir: "{{ home_dir }}/virtualenvs"
+venv: "{{ pkg }}"
+venv_path: "{{ venvs_dir }}/{{ venv }}"
+
+user: "{{ pkg }}"
+group: "{{ user }}"
+
+hipchat_api_url: "https://api.hipchat.com/v2"
+# Replace with your actual HipChat room id
+hipchat_room_id: 12345678
+hipchat_token: "{{ vault_hipchat_token }}"
+notify_hipchat: False

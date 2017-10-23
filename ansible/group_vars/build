@@ -1,0 +1,9 @@
+---
+# Repo name defaults to package name, change below if different:
+repo: "{{ pkg }}"
+# Replace with your GitHub user or org:
+repo_owner: ACMECorp
+repo_uri: "ssh://git@github.com/{{ repo_owner }}/{{ repo }}.git"
+# Override this with the appropriate branch or tag, in the environment files or through extra vars
+# e.g. staging may use 'develop' instead
+version: master
