@@ -29,8 +29,28 @@ You should change the app group and role names to match your app, and update the
 Host preparation
 ================
 
-Setting up the application user, directories, permissions and both the build and application hosts is done 
+Setting up the application user, directories, and permissions on both the build and application hosts is done 
 by running the tasks tagged with `prep`. For app machines this also covers setting up the app's service unit.
+
+```bash
+ansible-playbook -i staging site.yml --tags="prep"
+```
+
+Build and deployment
+====================
+The tags `build` and `deploy` cover the tasks for the respective activities.
+
+Examples:
+
+```bash
+ansible-playbook -i staging site.yml --tags="build,deploy"
+```
+
+When deploying the same version to several environments, a single `build` is needed:
+```bash
+ansible-playbook -i staging site.yml --tags="build,deploy" --extra-vars="version=v1.2.3"
+ansible-playbook -i production site.yml --tags="deploy"
+```
 
 
 Variables
